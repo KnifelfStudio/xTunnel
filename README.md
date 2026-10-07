@@ -3,8 +3,7 @@
 xTunnel 面向乙方在外网访问甲方内网数据的场景，计划通过 Android 客户端与 Go
 中转服务器建立隧道，让外网设备使用甲方网络访问内网资源。
 
-**当前处于项目初始化阶段。** `mobile` 和 `tv` 仅包含 Compose 示例页面，`server` 仅包含 Go
-控制台示例；配对、规则管理、VPN、DNS 代理及数据转发尚未实现，目前不能用于实际内网访问。
+`mobile` 和 `tv` 仍为 Compose 示例页面；Go 中转服务器已实现轨道/会话、设备配对、规则核验及 HTTPS/WSS 数据通道，详见 [服务器接口文档](server/docs/API.md) 和 [运行说明](server/README.md)。Android VPN、甲方网络解析/目标 socket 及完整客户端联调尚未实现，目前整个应用还不能用于实际内网访问。
 
 ## 项目结构
 
@@ -12,7 +11,7 @@ xTunnel 面向乙方在外网访问甲方内网数据的场景，计划通过 An
 |----------------------------------------------------------|---------------------------------------------|---------------------|
 | [`mobile/`](mobile/)                                     | Android 手机端，适配触摸交互                | Compose 示例页面    |
 | [`tv/`](tv/)                                             | Android TV 端，适配遥控器焦点交互           | TV Compose 示例页面 |
-| [`server/`](server/)                                     | Go 中转服务器，负责配对、会话管理和数据转发 | 控制台示例          |
+| [`server/`](server/)                                     | Go 中转服务器，负责配对、会话管理和数据转发 | HTTPS/WSS 中转实现 |
 | [`gradle/libs.versions.toml`](gradle/libs.versions.toml) | Android 插件与依赖版本目录                  | 已配置              |
 | [`AGENTS.md`](AGENTS.md)                                 | 已确认需求、协议边界、开发规范及验收要求    | 开发依据            |
 
@@ -20,7 +19,7 @@ xTunnel 面向乙方在外网访问甲方内网数据的场景，计划通过 An
 
 ## 第一版设计
 
-以下描述为已确认的目标设计，尚未实现。完整要求见 [AGENTS.md](AGENTS.md)。
+以下描述为已确认的目标设计。Go 中转端已实现对应服务接口，Android 侧尚未实现；完整要求见 [AGENTS.md](AGENTS.md)。
 
 ### 角色与访问链路
 
@@ -145,10 +144,10 @@ Debug APK 默认输出位置：
 
 ```sh
 cd server
-go run .
+go run . -listen :8443 -tls-cert /path/to/fullchain.pem -tls-key /path/to/privkey.pem
 ```
 
-当前入口只输出模板信息后退出，不监听端口，也没有 HTTPS 管理接口或 WSS 服务。中转监听地址、证书配置和部署方式将在实现后补充。
+入口启动 HTTPS 管理接口和 WSS 控制/业务通道，证书与私钥必填。中转状态仅驻留单实例内存，进程重启后需要重新注册轨道并配对。详见 [服务器运行说明](server/README.md) 与 [接口文档](server/docs/API.md)。
 
 ## 验证
 
